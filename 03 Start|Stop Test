@@ -1,0 +1,19 @@
+var authSS = SpreadsheetApp.openById("1DLzyazQmaYHs6MBwyUaTo4NabOa4L5gKy9nPW9v_bhA"); //examinees list
+
+function closeForm() {
+  var lastRow = authSS.getLastRow();
+  var formsArray = authSS.getSheetByName("answers").getRange(2, 2, lastRow, 1).getValues();
+  Logger.log(formsArray);
+  for (var i = 0; i < formsArray.length - 1; i++) {
+    FormApp.openById(formsArray[i]).setAcceptingResponses(false);
+  }
+}
+
+function openForm() {
+  var lastRow = authSS.getLastRow();
+  var formsArray = authSS.getSheetByName("answers").getRange(2, 2, lastRow, 1).getValues();
+  Logger.log(formsArray);
+  for (var i = 0; i < formsArray.length - 1; i++) {
+    FormApp.openById(formsArray[i]).setAcceptingResponses(true);
+  }
+}
