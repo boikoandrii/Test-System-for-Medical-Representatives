@@ -1,0 +1,55 @@
+var SPREADSHEET = SpreadsheetApp.openById('1LDSgdd5thYoIPebDsEFd8uPpgMnqmdc520MjFVyTfSw');
+//var FORM = FormApp.openById('1UGunCnALOn8idHIyd5oErPi-ou7N5F9ZdipWLf_7f-I');
+var NUMQUESTIONS = 48;
+
+function TestSys() {
+  clearForm(FORM);
+  var numQuestByBlock = 30;
+  var randQuestSeq = [];
+  var questColumn = 3;
+  var items = FORM.getItems();
+  randomizeQuestions(numQuestByBlock, randQuestSeq);
+  var questAns = [];
+  for (var i = 0; i < randQuestSeq.length - 0; i++) {
+    var quest = SPREADSHEET.getSheetByName('questions').getDataRange().getCell(randQuestSeq[i], questColumn).getValue();
+    for (var j = 0; j < 4; j++) {
+      questAns[j] = SPREADSHEET.getSheetByName('questions').getRange(randQuestSeq[i], j + questColumn + 1).getValue();
+    }
+    FORM.addMultipleChoiceItem()
+    .setTitle('Питання ' + (i + 1))
+    .setHelpText(quest)
+    .setChoiceValues(questAns);
+  }
+}
+
+function clearForm(form) {
+  while (form.getItems().length != 0) {
+    form.deleteItem(0);
+  }
+}
+
+function randomizeQuestions(x, rqs) {
+  for (var i = 0; i < NUMQUESTIONS; i++) {
+    rqs.push(Math.floor(Math.random() * x) + 1 + i * x);
+  }
+  Logger.log(rqs);
+  return rqs;
+}
+
+/**function moveItem() {
+  FORM.moveItem(3, 0);
+  FORM.moveItem(2, 1);
+}*/
+
+function findCorrectAnswerByRed() {
+  var data = SPREADSHEET.getSheetByName('questions').getDataRange();
+  for (var i = 1; i <= data.getValues().length; i++) {
+    for (var j = 4; j <= 7; j++) {
+      var color = data.getCell(i, j).getFontColor();
+      if (color != "#000000") {
+        SPREADSHEET.getSheetByName('questions').getRange(i, 8).setValue(j - 3);//data.getCell(i, j).setFontColor("#ff0000")//Logger.log(i + ":" + j + " - " + color);
+        continue;
+      }
+    }
+  }
+}
