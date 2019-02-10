@@ -1,0 +1,71 @@
+var AllAnswersSS = SpreadsheetApp.openById("1XcEkrLzcU1p2NBz3zKoIZu6Lqcm62YBeWua8sZw4Vfk");
+var testsSS = SpreadsheetApp.openById('1LDSgdd5thYoIPebDsEFd8uPpgMnqmdc520MjFVyTfSw');
+var FORM = FormApp.openById("1z6FxHcFZCr6HXnsSDrhiC0AegRct3bjSuDDzHV6G334");
+var FORMSS = SpreadsheetApp.openById("1DLzyazQmaYHs6MBwyUaTo4NabOa4L5gKy9nPW9v_bhA"); //examinees list
+var codesSS = SpreadsheetApp.openById("1LDSgdd5thYoIPebDsEFd8uPpgMnqmdc520MjFVyTfSw").getRangeByName("emailCodes").getValues();
+var START = 25;//+8
+
+function creatingForm() {
+  var lastRow = FORMSS.getLastRow();
+  var firstTime = true;
+  var strtRow = START;
+  var fnshRow = START + 7;
+  for (var i = strtRow; i <= fnshRow; i++) {
+    var SurName = FORMSS.getRange("A" + i);
+    composeForm(SurName.getValue(), i);
+  }
+}
+
+function composeForm(name, lr) {
+  var form = FormApp.create(name);
+  var url = form.getPublishedUrl();
+  var numQuest = 48;
+  //var numQuestByBlock = 30;
+  var questColumn = 3;
+  var ansColumn = 8;
+  var randQuestSeq = [];
+  var ansSeq = [];
+  randomizeQuestions(numQuest, randQuestSeq);
+  var questAns = [];
+  for (var i = 0; i < randQuestSeq.length - 0; i++) {
+    var quest = testsSS.getSheetByName('questions').getDataRange().getCell(randQuestSeq[i], questColumn).getValue();
+    for (var j = 0; j < 4; j++) {
+      questAns[j] = testsSS.getSheetByName('questions').getRange(randQuestSeq[i], j + questColumn + 1).getValue();
+      if (testsSS.getSheetByName('questions').getDataRange().getCell(randQuestSeq[i], ansColumn).getValue() == j + 1) {
+        ansSeq[i] = questAns[j];
+      }
+    }
+    form.addMultipleChoiceItem()
+    .setTitle(quest)
+    .setChoiceValues(questAns);
+  }
+  var testSheet = SpreadsheetApp.create(name);
+  form.setAcceptingResponses(false).setAllowResponseEdits(false).setLimitOneResponsePerUser(false).setShowLinkToRespondAgain(false).setDestination(FormApp.DestinationType.SPREADSHEET, testSheet.getId()).setConfirmationMessage("Результат прийде на корпоративну пошту близько 18:30");
+  FORMSS.getRange("B" + lr).setValue(form.getId());
+  FORMSS.getRange("C" + lr).setValue(testSheet.getId());
+  //AllAnswersSS.getSheetByName("data").getRange(AllAnswersSS.getLastRow() + 1, 1, 1, 1).setValue(testSheet.getId());
+  //AllAnswersSS.getSheetByName("data").getRange(AllAnswersSS.getLastRow(), 2, 1, 24).setValues([ansSeq]);
+}
+
+function sendEmail(email, url) {
+  MailApp.sendEmail(email,
+                    "Тести по Кампейн Буку",
+                    url,
+                    {htmlBody:
+                     '<!DOCTYPE html><html><body style="align:center; margin:0; padding:0; width:600px;">' +
+                     '<div style="height:100px; width100%; background-color:#3060C0; padding:40px; text-align:center; font-size:40pt; text-shadow:1px 1px #333333;">' +
+                     '<font color="white"><b>Тестування 07/07/2016</b></font></div>' +
+                     '<div style="height:80px; width100%; background-color:#cde8fa; padding:40px; text-align:center; font-size:32pt; text-shadow:1px 1px #ffffff;">' +
+                     '<font color="#000000"><a href="' + url + '"><b>ПОЧАТИ</b></a></font></div></body></html>'
+                    });
+}
+
+function randomizeQuestions(n, rqs) {
+  var x = [10, 20, 10, 25, 10, 20, 10, 19, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 23, 10, 13, 10, 20, 15, 10, 10, 20, 10, 10];
+  var xQuestion = 0;
+  for (var i = 0; i < n; i++) {
+    rqs.push(Math.floor(Math.random() * x[i]) + 1 + xQuestion);
+    xQuestion += x[i];
+  }
+  return rqs;
+}
