@@ -1,0 +1,58 @@
+var SS = SpreadsheetApp.openById("1DLzyazQmaYHs6MBwyUaTo4NabOa4L5gKy9nPW9v_bhA").getSheetByName("answers"); //examinees list
+var ansSS = SpreadsheetApp.openById("1LDSgdd5thYoIPebDsEFd8uPpgMnqmdc520MjFVyTfSw").getSheetByName("questions");
+var ansRange = ansSS.getRange(1, 3, 635, 6).getValues();                                                 //creates all questions+answers array
+var testers = SS.getDataRange().getValues();                                                             //creates all testers array
+var START = 17;
+var CORRANS = [10, 20, 10, 25, 10, 20, 10, 19, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 20, 10, 10, 10, 23, 10, 13, 10, 20, 15, 10, 10, 20, 10, 10];
+
+function calcTestResults() {
+  for (var i = START; i < START + 1; i++) {//testers.length; i++) {                                      //goes through all testers
+    var questText = [];
+    var actAnswers = SpreadsheetApp.openById(testers[i][2]).getActiveSheet().getDataRange().getValues(); //creates tester questions+answers array
+    for (var j = 1; j < actAnswers.length; j++) {                                                        //goes through tester questions
+      var result = 0;
+      for (var k = 1; k < actAnswers[0].length; k++) {                                                   //goes through all questions
+        for (var l = 0; l < 635; l++) {                                                                  //searchs question in questions+answers array
+          if (actAnswers[0][k] == ansRange[l][0]) {                                                      //checks if question the same
+            if (actAnswers[j][k] == ansRange[l][ansRange[l][5]]) {                                       //checks if answer correct
+              ++result;
+              //break;
+            }
+            else {
+              questText.push(actAnswers[0][k]);
+              questText.push("ВІДПОВІДЬ: " + actAnswers[j][k]);
+              questText.push("ПРАВИЛЬНО: " + ansRange[l][ansRange[l][5]]);
+              questText.push("\n");
+            }
+          }
+        }
+      }
+      //Logger.log(SpreadsheetApp.openById(testers[i][2]).getName() + ": " + Math.round(result / 24 * 100) + "%");
+      testers[i][3] = result / 48;
+      fillDoc(testers[i][0], actAnswers[j][0], testers[i][3], testers[i][4], questText, i);
+    }
+  }
+  SS.getDataRange().setValues(testers);
+}
+
+function fillDoc(header, date, value, email, questText, docIdRow) {
+  var doc = DocumentApp.create(header);
+  var docBody = doc.getBody().editAsText();
+  docBody.appendText("Результат тесту - " + Math.round((value * 1000))/10 + "%");
+  doc.getBody().appendHorizontalRule();
+  docBody.appendText("Даст і час закінчення тесту: " + date);
+  doc.getBody().appendHorizontalRule();
+  for (var i = 0; i < questText.length; i++) {
+    docBody.appendText("\n" + questText[i]).setFontSize(14);
+  }
+  testers[docIdRow][5] = doc.getId();
+}
+
+function sendPdf() {
+  for (var i = START; i < START + 1; i++) {//testers.length; i++) {
+    if (testers[i][5] != "") {
+      var attFile = DriveApp.getFileById(testers[i][5]).getAs(MimeType.PDF);
+      MailApp.sendEmail(testers[i][4], "Результати тесту 19.09.2016", "", {attachments: [attFile]});
+    }
+  }
+}
